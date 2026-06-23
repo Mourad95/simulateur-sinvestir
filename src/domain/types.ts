@@ -17,6 +17,10 @@ export const SUPPORTED_COINS = [
 
 export type CoinId = (typeof SUPPORTED_COINS)[number]["id"];
 
+/** Type guard : `value` est-il un identifiant de crypto supporté ? */
+export const isValidCoin = (value: unknown): value is CoinId =>
+  typeof value === "string" && SUPPORTED_COINS.some((coin) => coin.id === value);
+
 /** Fréquence d'apport. `once` = investissement unique ; sinon DCA récurrent. */
 export type Frequency = "once" | "weekly" | "monthly";
 

@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { PRICE_CACHE_TTL_MS } from "@/config/prices";
 
 /**
  * Provider TanStack Query. Le QueryClient est créé une seule fois par montage
@@ -13,7 +14,7 @@ export function QueryProvider({ children }: { children: ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 60 * 1000, // 1 h : l'historique journalier ne bouge pas en intra-day
+            staleTime: PRICE_CACHE_TTL_MS, // l'historique journalier ne bouge pas en intra-day
             retry: 1,
             refetchOnWindowFocus: false,
           },

@@ -8,6 +8,14 @@ import { Card } from "./ui/primitives";
 import { usePriceHistory } from "@/hooks/usePriceHistory";
 import { runBacktest } from "@/domain/backtest";
 import { SUPPORTED_COINS, type CoinId } from "@/domain/types";
+import {
+  COMPARISON_RATE,
+  COMPARISON_LABEL,
+  DEFAULT_HISTORY_YEARS,
+  DEFAULT_COIN_ID,
+  DEFAULT_AMOUNT,
+} from "@/domain/constants";
+import { startOfToday, yearsBefore } from "@/lib/time";
 import { formatMoney } from "@/lib/format";
 
 // Recharts mesure le DOM : on évite son rendu serveur (warning de taille au prerender).
@@ -21,10 +29,6 @@ const EvolutionChart = dynamic(
   },
 );
 
-/** Taux du placement de comparaison (Livret A, plafond 3% en référence). */
-const COMPARISON_RATE = 0.03;
-const COMPARISON_LABEL = "Livret A (3 %)";
-
 const EMPTY_PRICES = [] as const;
 
 /**
@@ -32,8 +36,8 @@ const EMPTY_PRICES = [] as const;
  * Reçoit ses valeurs par défaut en props → réutilisable hors de cette app.
  */
 export function Simulator({
-  defaultCoinId = "BTC_USDT",
-  defaultAmount = 100,
+  defaultCoinId = DEFAULT_COIN_ID,
+  defaultAmount = DEFAULT_AMOUNT,
   compact = false,
 }: {
   defaultCoinId?: CoinId;
@@ -112,15 +116,7 @@ export function Simulator({
 }
 
 function initialForm(coinId: CoinId, amount: number): FormState {
-  // Période par défaut : 2 ans. Gate.io fournit ~1000 jours d'historique journalier
-  // en une requête, on reste donc largement dans la fenêtre couverte.
   const end = startOfToday();
-  const start = end - 2 * 365 * 24 * 60 * 60 * 1000;
+  const start = yearsBefore(end, DEFAULT_HISTORY_YEARS);
   return { coinId, amount, frequency: "monthly", startDate: start, endDate: end };
-}
-
-/** Date du jour normalisée à minuit, pour des bornes stables. */
-function startOfToday(): number {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
 }

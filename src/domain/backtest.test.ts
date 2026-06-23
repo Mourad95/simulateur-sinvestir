@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildContributionDates, findClosestPrice, runBacktest } from "./backtest";
+import { MS_PER_DAY as DAY } from "./constants";
 import type { PricePoint, SimulationInput } from "./types";
-
-const DAY = 24 * 60 * 60 * 1000;
 
 /** Construit une série de prix journaliers à partir d'un tableau de prix. */
 function buildPrices(start: number, dailyPrices: number[]): PricePoint[] {

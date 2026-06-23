@@ -1,7 +1,10 @@
 import type { CoinId, PricePoint } from "@/domain/types";
-
-const GATEIO_BASE = "https://api.gateio.ws/api/v4";
-const MAX_POINTS = 1000; // limite Gate.io par requête
+import {
+  GATEIO_BASE_URL,
+  MAX_CANDLES,
+  PRICE_CACHE_TTL_SECONDS,
+} from "@/config/prices";
+import { toMs } from "@/lib/time";
 
 /**
  * Une bougie Gate.io : tableau de chaînes.
@@ -22,13 +25,13 @@ export async function fetchPriceHistory(
   toSeconds: number,
 ): Promise<PricePoint[]> {
   const url =
-    `${GATEIO_BASE}/spot/candlesticks` +
-    `?currency_pair=${pair}&interval=1d&limit=${MAX_POINTS}`;
+    `${GATEIO_BASE_URL}/spot/candlesticks` +
+    `?currency_pair=${pair}&interval=1d&limit=${MAX_CANDLES}`;
 
   const response = await fetch(url, {
     headers: { accept: "application/json" },
-    // Cache Next côté serveur : 1h. L'historique journalier ne change pas en intra-day.
-    next: { revalidate: 3600 },
+    // Cache Next côté serveur : l'historique journalier ne change pas en intra-day.
+    next: { revalidate: PRICE_CACHE_TTL_SECONDS },
   });
 
   if (!response.ok) {
@@ -36,17 +39,19 @@ export async function fetchPriceHistory(
   }
 
   const candles = (await response.json()) as GateCandle[];
+  const fromMs = toMs(fromSeconds);
+  const toMsBound = toMs(toSeconds);
 
   return candles
     .map((candle) => ({
-      timestamp: Number(candle[0]) * 1000,
+      timestamp: toMs(Number(candle[0])),
       price: Number(candle[2]), // clôture
     }))
     .filter(
       (point) =>
         Number.isFinite(point.price) &&
-        point.timestamp >= fromSeconds * 1000 &&
-        point.timestamp <= toSeconds * 1000,
+        point.timestamp >= fromMs &&
+        point.timestamp <= toMsBound,
     );
 }
 

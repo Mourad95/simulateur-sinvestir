@@ -5,9 +5,7 @@ import type {
   SimulationInput,
   SimulationResult,
 } from "./types";
-
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-const DAYS_PER_YEAR = 365.25;
+import { MS_PER_DAY, DAYS_PER_YEAR } from "./constants";
 
 /** Intervalle entre deux apports, en jours. `once` n'a pas d'intervalle récurrent. */
 const FREQUENCY_DAYS: Record<Exclude<Frequency, "once">, number> = {

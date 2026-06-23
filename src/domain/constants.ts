@@ -1,4 +1,4 @@
-import type { CoinId } from "./types";
+import { DEFAULT_COIN } from "./types";
 
 /** Constantes du domaine — valeurs métier et temporelles partagées. */
 
@@ -16,5 +16,5 @@ export const COMPARISON_LABEL = "Livret A (3 %)";
 export const DEFAULT_HISTORY_YEARS = 2;
 
 /** Crypto et montant proposés par défaut au chargement. */
-export const DEFAULT_COIN_ID = "BTC_USDT" satisfies CoinId;
+export const DEFAULT_COIN_ID = DEFAULT_COIN.id;
 export const DEFAULT_AMOUNT = 100;

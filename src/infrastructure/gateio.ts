@@ -1,8 +1,9 @@
-import type { CoinId, PricePoint } from "@/domain/types";
+import type { Coin, CoinId, PricePoint } from "@/domain/types";
 import {
   GATEIO_BASE_URL,
   MAX_CANDLES,
   PRICE_CACHE_TTL_SECONDS,
+  COINS_CACHE_TTL_SECONDS,
 } from "@/config/prices";
 import { toMs } from "@/lib/time";
 
@@ -11,6 +12,43 @@ import { toMs } from "@/lib/time";
  * Index : [0] timestamp (s), [1] volume quote, [2] close, [3] high, [4] low, [5] open, ...
  */
 type GateCandle = string[];
+
+/** Paire spot renvoyée par Gate.io (champs utiles seulement). */
+type GatePair = {
+  id: string;
+  base: string;
+  base_name?: string;
+  quote: string;
+  trade_status: string;
+};
+
+/**
+ * Récupère la liste des paires spot tradables contre USDT via Gate.io.
+ * Triées par symbole. `name` utilise le nom complet quand Gate.io le fournit.
+ *
+ * Lève une PriceProviderError en cas d'échec ; l'appelant gère la résilience.
+ */
+export async function fetchTradablePairs(): Promise<Coin[]> {
+  const response = await fetch(`${GATEIO_BASE_URL}/spot/currency_pairs`, {
+    headers: { accept: "application/json" },
+    next: { revalidate: COINS_CACHE_TTL_SECONDS },
+  });
+
+  if (!response.ok) {
+    throw new PriceProviderError(`Gate.io a répondu ${response.status}`, response.status);
+  }
+
+  const pairs = (await response.json()) as GatePair[];
+
+  return pairs
+    .filter((pair) => pair.quote === "USDT" && pair.trade_status === "tradable")
+    .map((pair) => ({
+      id: pair.id,
+      symbol: pair.base,
+      name: pair.base_name?.trim() || pair.base,
+    }))
+    .sort((a, b) => a.symbol.localeCompare(b.symbol));
+}
 
 /**
  * Récupère l'historique de prix journalier (clôture, en USDT) d'une paire via Gate.io.

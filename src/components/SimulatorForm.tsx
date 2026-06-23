@@ -1,7 +1,8 @@
 "use client";
 
-import { Field, SegmentedControl, Select, TextInput } from "@/components/ui/primitives";
-import { SUPPORTED_COINS, type CoinId, type Frequency } from "@/domain/types";
+import { Field, SegmentedControl, TextInput } from "@/components/ui/primitives";
+import { CoinCombobox } from "./CoinCombobox";
+import type { Coin, CoinId, Frequency } from "@/domain/types";
 import { toDateInputValue, fromDateInputValue } from "@/lib/format";
 
 export type FormState = {
@@ -20,10 +21,12 @@ const FREQUENCY_OPTIONS: readonly { value: Frequency; label: string }[] = [
 
 export function SimulatorForm({
   state,
+  coins,
   onChange,
   disabled,
 }: {
   state: FormState;
+  coins: readonly Coin[];
   onChange: (next: FormState) => void;
   disabled: boolean;
 }) {
@@ -33,19 +36,13 @@ export function SimulatorForm({
 
   return (
     <div className="grid gap-5">
-      <Field label="Cryptomonnaie" htmlFor="coin">
-        <Select
-          id="coin"
+      <Field label="Cryptomonnaie">
+        <CoinCombobox
+          coins={coins}
           value={state.coinId}
           disabled={disabled}
-          onChange={(e) => patch({ coinId: e.target.value as CoinId })}
-        >
-          {SUPPORTED_COINS.map((coin) => (
-            <option key={coin.id} value={coin.id}>
-              {coin.label} ({coin.symbol})
-            </option>
-          ))}
-        </Select>
+          onChange={(coinId) => patch({ coinId })}
+        />
       </Field>
 
       <Field label={`${amountLabel} (${amountUnit})`} htmlFor="amount">

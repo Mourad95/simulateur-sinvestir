@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchPriceHistory, PriceProviderError } from "./gateio";
+import { fetchPriceHistory, fetchTradablePairs, PriceProviderError } from "./gateio";
 import { toSeconds } from "@/lib/time";
 
 /** Une bougie Gate.io : [timestamp_s, volumeQuote, close, high, low, open, ...]. */
@@ -73,6 +73,46 @@ describe("fetchPriceHistory", () => {
     const calledUrl = String(fetchMock.mock.calls[0][0]);
     expect(calledUrl).toContain("currency_pair=ETH_USDT");
     expect(calledUrl).toContain("interval=1d");
+  });
+});
+
+describe("fetchTradablePairs", () => {
+  const pair = (over: Record<string, unknown>) => ({
+    id: "X_USDT",
+    base: "X",
+    quote: "USDT",
+    trade_status: "tradable",
+    ...over,
+  });
+
+  it("ne garde que les paires USDT tradables, mappées et triées par symbole", async () => {
+    mockFetchOnce({
+      json: async () => [
+        pair({ id: "SOL_USDT", base: "SOL", base_name: "Solana" }),
+        pair({ id: "BTC_USDT", base: "BTC", base_name: "Bitcoin" }),
+        pair({ id: "ETH_BTC", base: "ETH", quote: "BTC" }), // mauvais quote
+        pair({ id: "OLD_USDT", base: "OLD", trade_status: "untradable" }), // non tradable
+      ],
+    });
+
+    const coins = await fetchTradablePairs();
+
+    expect(coins.map((c) => c.symbol)).toEqual(["BTC", "SOL"]);
+    expect(coins[0]).toEqual({ id: "BTC_USDT", symbol: "BTC", name: "Bitcoin" });
+  });
+
+  it("retombe sur le symbole quand le nom complet est absent", async () => {
+    mockFetchOnce({ json: async () => [pair({ id: "ZZZ_USDT", base: "ZZZ" })] });
+
+    const coins = await fetchTradablePairs();
+
+    expect(coins[0].name).toBe("ZZZ");
+  });
+
+  it("lève une PriceProviderError en cas d'échec HTTP", async () => {
+    mockFetchOnce({ ok: false, status: 503 });
+
+    await expect(fetchTradablePairs()).rejects.toMatchObject({ status: 503 });
   });
 });
 

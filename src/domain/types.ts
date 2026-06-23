@@ -4,22 +4,39 @@
  */
 
 /**
- * Cryptos proposées. `id` = paire Gate.io (spot, contre USDT) utilisée pour
- * récupérer l'historique de prix.
+ * Identifiant d'une crypto = paire spot Gate.io contre USDT (ex: "BTC_USDT").
+ * La liste réelle est récupérée dynamiquement via Gate.io ; le type reste un
+ * `string` validé au runtime par `isValidCoin`.
  */
-export const SUPPORTED_COINS = [
-  { id: "BTC_USDT", symbol: "BTC", label: "Bitcoin" },
-  { id: "ETH_USDT", symbol: "ETH", label: "Ethereum" },
-  { id: "SOL_USDT", symbol: "SOL", label: "Solana" },
-  { id: "ADA_USDT", symbol: "ADA", label: "Cardano" },
-  { id: "XRP_USDT", symbol: "XRP", label: "XRP" },
-] as const;
+export type CoinId = string;
 
-export type CoinId = (typeof SUPPORTED_COINS)[number]["id"];
+/** Une crypto sélectionnable, telle qu'exposée à la présentation. */
+export type Coin = Readonly<{
+  /** Paire Gate.io, ex: "BTC_USDT". */
+  id: CoinId;
+  /** Symbole, ex: "BTC". */
+  symbol: string;
+  /** Nom complet, ex: "Bitcoin". */
+  name: string;
+}>;
 
-/** Type guard : `value` est-il un identifiant de crypto supporté ? */
+/**
+ * Liste minimale servant de valeur initiale et de filet si l'API échoue.
+ * La liste complète (2000+ paires USDT) est chargée dynamiquement.
+ */
+export const FALLBACK_COINS: readonly Coin[] = [
+  { id: "BTC_USDT", symbol: "BTC", name: "Bitcoin" },
+  { id: "ETH_USDT", symbol: "ETH", name: "Ethereum" },
+  { id: "SOL_USDT", symbol: "SOL", name: "Solana" },
+  { id: "ADA_USDT", symbol: "ADA", name: "Cardano" },
+  { id: "XRP_USDT", symbol: "XRP", name: "XRP" },
+];
+
+export const DEFAULT_COIN = FALLBACK_COINS[0];
+
+/** Type guard : `value` a-t-il la forme d'un identifiant de paire USDT ? */
 export const isValidCoin = (value: unknown): value is CoinId =>
-  typeof value === "string" && SUPPORTED_COINS.some((coin) => coin.id === value);
+  typeof value === "string" && /^[A-Z0-9]+_USDT$/.test(value);
 
 /** Fréquence d'apport. `once` = investissement unique ; sinon DCA récurrent. */
 export type Frequency = "once" | "weekly" | "monthly";

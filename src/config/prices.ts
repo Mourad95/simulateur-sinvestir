@@ -10,3 +10,7 @@ export const PRICE_CACHE_TTL_MS = 60 * 60 * 1000;
 
 /** Même durée en secondes, pour l'option `next.revalidate`. */
 export const PRICE_CACHE_TTL_SECONDS = PRICE_CACHE_TTL_MS / 1000;
+
+/** Durée de cache de la liste des paires (change rarement). 24 h. */
+export const COINS_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+export const COINS_CACHE_TTL_SECONDS = COINS_CACHE_TTL_MS / 1000;

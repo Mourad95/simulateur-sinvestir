@@ -1,4 +1,4 @@
-import type { ReactNode, SelectHTMLAttributes, InputHTMLAttributes } from "react";
+import type { ReactNode, InputHTMLAttributes } from "react";
 
 /** Carte sur fond soft, rayon et bordure repris du design S'investir. */
 export function Card({
@@ -41,14 +41,6 @@ const fieldClasses =
 
 export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={`${fieldClasses} ${props.className ?? ""}`} />;
-}
-
-export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
-  return (
-    <select {...props} className={`${fieldClasses} cursor-pointer ${props.className ?? ""}`}>
-      {props.children}
-    </select>
-  );
 }
 
 /** Groupe de boutons segmentés (pour la fréquence). */

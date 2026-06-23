@@ -94,19 +94,24 @@ aux **365 derniers jours** sans clé payante — rédhibitoire pour un backtest 
 pluriannuel.
 
 → J'ai retenu l'**API publique de klines de Gate.io** : pas de clé, pas de secret à
-gérer, ~1000 jours d'historique journalier par requête, toutes les paires majeures.
-La démo est ainsi **100 % reproductible** par l'évaluateur sans configuration.
+gérer, ~1000 jours d'historique journalier par requête. La **liste des cryptos est
+elle aussi dynamique** : les ~2000 paires USDT tradables sont récupérées via Gate.io
+(`/api/coins`) et parcourues dans un combobox de recherche. La démo est ainsi
+**100 % reproductible** par l'évaluateur sans configuration.
 
 Les prix sont en **USDT (≈ USD)**, devise réelle des données — affichée telle quelle
 par honnêteté plutôt que convertie approximativement.
 
 ### Résilience & performance
 
-- **API route comme proxy** : le composant ne connaît pas le fournisseur. Le cache
-  (mémoire process + `revalidate` Next, 1 h) amortit les appels et gère les
-  _rate limits_ ; les erreurs sont traduites en messages clairs côté UI.
-- **Requêtes obsolètes ignorées** (garde par `requestId`) : pas de _race condition_
-  quand l'utilisateur change rapidement de crypto/période.
+- **API routes comme proxy** (`/api/prices`, `/api/coins`) : le composant ne connaît
+  pas le fournisseur. Le cache (mémoire process + `revalidate` Next) amortit les appels
+  et gère les _rate limits_ ; les erreurs sont traduites en messages clairs côté UI.
+- **State serveur via TanStack Query** : cache, dédoublonnage et gestion native des
+  requêtes obsolètes (pas de _race condition_ au changement de crypto/période). Une
+  liste minimale en dur sert de _fallback_ si l'API des paires échoue.
+- **Combobox maison** (sans dépendance) : recherche par symbole/nom sur 2000+ paires,
+  résultats plafonnés, navigable au clavier et accessible (ARIA).
 - **Responsive vérifié** (390 px → `scrollWidth == innerWidth`, zéro débordement),
   graphique Recharts contraint à son conteneur.
 
@@ -117,8 +122,9 @@ par honnêteté plutôt que convertie approximativement.
 - Historique borné à ~1000 jours (limite Gate.io en une requête) — paginable si besoin.
 - CAGR (perf. annualisée) calculé sur la durée totale de la période ; pour du DCA,
   c'est une approximation pédagogique, pas un TRI exact.
-- 5 cryptos proposées (extensible via [`SUPPORTED_COINS`](src/domain/types.ts)).
-- Pas de tests sur la couche présentation (priorité au domaine).
+- Liste des cryptos chargée dynamiquement (paires USDT Gate.io) ; nom complet quand
+  le fournisseur l'expose, sinon symbole.
+- Pas de tests sur la couche présentation (priorité au domaine et à l'infra).
 
 ---
 

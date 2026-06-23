@@ -5,8 +5,9 @@ import { SimulatorForm, type FormState } from "./SimulatorForm";
 import { SimulatorResult } from "./SimulatorResult";
 import { Card } from "./ui/primitives";
 import { usePriceHistory } from "@/hooks/usePriceHistory";
+import { useCoins } from "@/hooks/useCoins";
 import { runBacktest } from "@/domain/backtest";
-import { SUPPORTED_COINS, type CoinId } from "@/domain/types";
+import type { CoinId } from "@/domain/types";
 import {
   COMPARISON_RATE,
   DEFAULT_HISTORY_YEARS,
@@ -35,6 +36,8 @@ export function Simulator({
     initialForm(defaultCoinId, defaultAmount),
   );
 
+  const { coins } = useCoins();
+
   // State serveur délégué à TanStack Query (cache, dédoublonnage, requêtes obsolètes).
   const {
     data: prices = EMPTY_PRICES,
@@ -59,12 +62,17 @@ export function Simulator({
   );
 
   const coinLabel =
-    SUPPORTED_COINS.find((c) => c.id === form.coinId)?.label ?? form.coinId;
+    coins.find((coin) => coin.id === form.coinId)?.name ?? form.coinId;
 
   return (
     <div className={`grid gap-5 ${compact ? "" : "lg:grid-cols-[360px_1fr]"}`}>
       <Card className="p-5">
-        <SimulatorForm state={form} onChange={setForm} disabled={isFetching} />
+        <SimulatorForm
+          state={form}
+          coins={coins}
+          onChange={setForm}
+          disabled={isFetching}
+        />
       </Card>
 
       <div className="grid min-w-0 content-start gap-4">

@@ -1,29 +1,31 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { SimulatorForm, type FormState } from "./SimulatorForm";
 import { ResultCards } from "./ResultCards";
 import { Card } from "./ui/primitives";
+import { usePriceHistory } from "@/hooks/usePriceHistory";
+import { runBacktest } from "@/domain/backtest";
+import { SUPPORTED_COINS, type CoinId } from "@/domain/types";
+import { formatMoney } from "@/lib/format";
 
 // Recharts mesure le DOM : on évite son rendu serveur (warning de taille au prerender).
 const EvolutionChart = dynamic(
   () => import("./EvolutionChart").then((m) => m.EvolutionChart),
   {
     ssr: false,
-    loading: () => <div className="h-[320px] w-full animate-pulse rounded-lg bg-surface" />,
+    loading: () => (
+      <div className="h-[320px] w-full animate-pulse rounded-lg bg-surface" />
+    ),
   },
 );
-import { runBacktest } from "@/domain/backtest";
-import { SUPPORTED_COINS, type CoinId, type PricePoint } from "@/domain/types";
-import { fetchPrices } from "@/lib/prices-client";
-import { formatMoney } from "@/lib/format";
 
 /** Taux du placement de comparaison (Livret A, plafond 3% en référence). */
 const COMPARISON_RATE = 0.03;
 const COMPARISON_LABEL = "Livret A (3 %)";
 
-type Status = "idle" | "loading" | "ready" | "error";
+const EMPTY_PRICES = [] as const;
 
 /**
  * Composant simulateur autonome et embeddable.
@@ -38,33 +40,17 @@ export function Simulator({
   defaultAmount?: number;
   compact?: boolean;
 }) {
-  const [form, setForm] = useState<FormState>(() => initialForm(defaultCoinId, defaultAmount));
-  const [prices, setPrices] = useState<readonly PricePoint[]>([]);
-  const [status, setStatus] = useState<Status>("idle");
-  const [error, setError] = useState<string | null>(null);
-  const requestId = useRef(0);
+  const [form, setForm] = useState<FormState>(() =>
+    initialForm(defaultCoinId, defaultAmount),
+  );
 
-  // Refetch des prix quand crypto/période changent (le montant/fréquence se recalculent localement).
-  useEffect(() => {
-    const id = ++requestId.current;
-    // Passage en "loading" synchrone au changement de dépendance : pattern de
-    // data-fetching volontaire (la règle vise les boucles de rendu, pas ce cas).
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setStatus("loading");
-    setError(null);
-
-    fetchPrices(form.coinId as CoinId, form.startDate, form.endDate)
-      .then((data) => {
-        if (id !== requestId.current) return; // requête obsolète, on ignore
-        setPrices(data);
-        setStatus("ready");
-      })
-      .catch((err: unknown) => {
-        if (id !== requestId.current) return;
-        setError(err instanceof Error ? err.message : "Erreur inattendue.");
-        setStatus("error");
-      });
-  }, [form.coinId, form.startDate, form.endDate]);
+  // State serveur délégué à TanStack Query (cache, dédoublonnage, requêtes obsolètes).
+  const {
+    data: prices = EMPTY_PRICES,
+    isFetching,
+    isError,
+    error,
+  } = usePriceHistory(form.coinId, form.startDate, form.endDate);
 
   const result = useMemo(
     () =>
@@ -87,19 +73,21 @@ export function Simulator({
   return (
     <div className={`grid gap-5 ${compact ? "" : "lg:grid-cols-[360px_1fr]"}`}>
       <Card className="p-5">
-        <SimulatorForm state={form} onChange={setForm} disabled={status === "loading"} />
+        <SimulatorForm state={form} onChange={setForm} disabled={isFetching} />
       </Card>
 
       <div className="grid min-w-0 content-start gap-4">
-        {status === "error" ? (
-          <Card className="p-6 text-loss">{error}</Card>
+        {isError ? (
+          <Card className="p-6 text-loss">
+            {error instanceof Error ? error.message : "Erreur inattendue."}
+          </Card>
         ) : (
           <>
             <ResultCards result={result} />
             <Card className="overflow-hidden p-4 sm:p-5">
               <div className="mb-3 flex items-baseline justify-between">
                 <h2 className="font-semibold">Évolution — {coinLabel}</h2>
-                {status === "loading" && (
+                {isFetching && (
                   <span className="text-xs text-text-muted">Chargement…</span>
                 )}
               </div>

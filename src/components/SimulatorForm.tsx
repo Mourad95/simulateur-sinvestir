@@ -1,11 +1,11 @@
 "use client";
 
 import { Field, SegmentedControl, Select, TextInput } from "@/components/ui/primitives";
-import { SUPPORTED_COINS, type Frequency } from "@/domain/types";
+import { SUPPORTED_COINS, type CoinId, type Frequency } from "@/domain/types";
 import { toDateInputValue, fromDateInputValue } from "@/lib/format";
 
 export type FormState = {
-  coinId: string;
+  coinId: CoinId;
   amount: number;
   frequency: Frequency;
   startDate: number;
@@ -38,7 +38,7 @@ export function SimulatorForm({
           id="coin"
           value={state.coinId}
           disabled={disabled}
-          onChange={(e) => patch({ coinId: e.target.value })}
+          onChange={(e) => patch({ coinId: e.target.value as CoinId })}
         >
           {SUPPORTED_COINS.map((coin) => (
             <option key={coin.id} value={coin.id}>

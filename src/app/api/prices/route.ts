@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { PriceProviderError, fetchPriceHistory } from "@/infrastructure/gateio";
+import {
+  PriceProviderError,
+  fetchPriceHistory,
+} from "@/services/gateio/gateio";
 import { isValidCoin, type CoinId, type PricePoint } from "@/domain/types";
 import { PRICE_CACHE_TTL_MS } from "@/config/prices";
 
@@ -24,10 +27,14 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   try {
     const prices = await fetchPriceHistory(params.coin, params.from, params.to);
-    cache.set(cacheKey, { data: prices, expiresAt: nowMs() + PRICE_CACHE_TTL_MS });
+    cache.set(cacheKey, {
+      data: prices,
+      expiresAt: nowMs() + PRICE_CACHE_TTL_MS,
+    });
     return NextResponse.json({ prices, cached: false });
   } catch (error) {
-    const status = error instanceof PriceProviderError && error.status === 429 ? 429 : 502;
+    const status =
+      error instanceof PriceProviderError && error.status === 429 ? 429 : 502;
     const message =
       status === 429
         ? "Trop de requêtes vers le fournisseur de données. Réessayez dans un instant."
@@ -36,7 +43,9 @@ export async function GET(request: Request): Promise<NextResponse> {
   }
 }
 
-type ParsedParams = { coin: CoinId; from: number; to: number } | { error: string };
+type ParsedParams =
+  | { coin: CoinId; from: number; to: number }
+  | { error: string };
 
 function parseParams(search: URLSearchParams): ParsedParams {
   const coin = search.get("coin");

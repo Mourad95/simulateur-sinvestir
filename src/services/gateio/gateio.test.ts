@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchPriceHistory, fetchTradablePairs, PriceProviderError } from "./gateio";
+import {
+  fetchPriceHistory,
+  fetchTradablePairs,
+  PriceProviderError,
+} from "./gateio";
 import { toSeconds } from "@/lib/time";
 
 /** Une bougie Gate.io : [timestamp_s, volumeQuote, close, high, low, open, ...]. */
@@ -7,7 +11,9 @@ function candle(timestampSeconds: number, close: number): string[] {
   return [String(timestampSeconds), "0", String(close), "0", "0", "0"];
 }
 
-function mockFetchOnce(response: Partial<Response> & { json?: () => Promise<unknown> }) {
+function mockFetchOnce(
+  response: Partial<Response> & { json?: () => Promise<unknown> },
+) {
   vi.stubGlobal(
     "fetch",
     vi.fn().mockResolvedValue({ ok: true, status: 200, ...response }),
@@ -46,7 +52,9 @@ afterEach(() => {
 describe("fetchPriceHistory", () => {
   it("mappe les bougies en points {timestamp ms, price}", async () => {
     const day = 1_700_000_000;
-    mockFetchOnce({ json: async () => [candle(day, 100), candle(day + 86400, 110)] });
+    mockFetchOnce({
+      json: async () => [candle(day, 100), candle(day + 86400, 110)],
+    });
 
     const prices = await fetchPriceHistory("BTC_USDT", day, day + 86400);
 
@@ -90,7 +98,9 @@ describe("fetchPriceHistory", () => {
   });
 
   it("construit une URL Gate.io avec la paire demandée", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => [] });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => [] });
     vi.stubGlobal("fetch", fetchMock);
 
     await fetchPriceHistory("ETH_USDT", 1_700_000_000, 1_700_086_400);
@@ -125,7 +135,11 @@ describe("fetchTradablePairs", () => {
 
     // BTC a plus de volume que SOL → il passe devant malgré l'ordre d'origine.
     expect(coins.map((c) => c.symbol)).toEqual(["BTC", "SOL"]);
-    expect(coins[0]).toEqual({ id: "BTC_USDT", symbol: "BTC", name: "Bitcoin" });
+    expect(coins[0]).toEqual({
+      id: "BTC_USDT",
+      symbol: "BTC",
+      name: "Bitcoin",
+    });
   });
 
   it("place les paires sans volume connu en fin de liste", async () => {

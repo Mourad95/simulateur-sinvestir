@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { PriceProviderError, fetchTradablePairs } from "@/infrastructure/gateio";
+import {
+  PriceProviderError,
+  fetchTradablePairs,
+} from "@/services/gateio/gateio";
 import { COINS_CACHE_TTL_MS } from "@/config/prices";
 import type { Coin } from "@/domain/types";
 
@@ -20,7 +23,8 @@ export async function GET(): Promise<NextResponse> {
     cache = { data: coins, expiresAt: Date.now() + COINS_CACHE_TTL_MS };
     return NextResponse.json({ coins, cached: false });
   } catch (error) {
-    const status = error instanceof PriceProviderError && error.status === 429 ? 429 : 502;
+    const status =
+      error instanceof PriceProviderError && error.status === 429 ? 429 : 502;
     return NextResponse.json(
       { error: "Impossible de récupérer la liste des cryptos pour le moment." },
       { status },

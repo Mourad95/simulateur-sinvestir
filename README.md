@@ -22,7 +22,7 @@ Autres commandes :
 
 ```bash
 npm run build    # build de production
-npm test         # tests unitaires du domaine (Vitest)
+npm test         # tests unitaires domaine + infra (Vitest)
 npm run lint
 ```
 
@@ -36,7 +36,8 @@ API publique sans clé.
 | `/`           | Le simulateur complet.                                           |
 | `/embed`      | Version épurée (sans header/footer) pensée pour l'`<iframe>`.    |
 | `/demo-embed` | Démonstration de l'intégration : le simulateur chargé en iframe. |
-| `/api/prices` | Proxy interne vers le fournisseur de prix (cache + résilience).  |
+| `/api/prices` | Proxy interne : historique de prix d'une paire (cache).          |
+| `/api/coins`  | Proxy interne : liste des paires USDT triées par volume (cache). |
 
 ---
 
@@ -65,23 +66,27 @@ src/
 ├─ domain/            # logique métier PURE, testable sans réseau ni framework
 │  ├─ backtest.ts     # calcul DCA / one-shot + CAGR
 │  ├─ constants.ts    # valeurs métier & temporelles partagées
-│  └─ types.ts        # types + isValidCoin (type guard)
+│  └─ types.ts        # types + isValidCoin (type guard) + fallback coins
 ├─ config/            # config externe centralisée (URL/cache du fournisseur)
 ├─ infrastructure/
-│  └─ gateio.ts       # récupération des prix (détail remplaçable)
-├─ hooks/             # usePriceHistory (TanStack Query)
+│  └─ gateio.ts       # accès Gate.io : prix + liste des paires (remplaçable)
+├─ hooks/             # usePriceHistory, useCoins (TanStack Query)
 ├─ app/
-│  ├─ api/prices/     # proxy serveur : cache + gestion d'erreurs
+│  ├─ api/prices/     # proxy serveur : prix d'une paire (cache + erreurs)
+│  ├─ api/coins/      # proxy serveur : liste des paires (cache)
 │  ├─ embed/          # version embarquable
 │  └─ demo-embed/     # preuve d'intégration
-├─ components/        # Simulator (orchestration) + SimulatorResult/Form/Chart + ui/
-└─ lib/               # time (conversions), format, client API
+├─ components/        # Simulator (orchestration) + SimulatorResult / Form
+│  │                  #   / CoinCombobox / EvolutionChart / ResultCards
+│  └─ ui/             # primitives (Card, Field, inputs…)
+└─ lib/               # time (conversions), format, clients API
 ```
 
-- **Le cœur métier (`domain/`) est pur et testé** ([backtest.test.ts](src/domain/backtest.test.ts))
-  et la couche infra parse/filtre les données externes sous test
-  ([gateio.test.ts](src/infrastructure/gateio.test.ts)) — 16 tests au total. La source
-  de prix n'est qu'un détail d'infrastructure, remplaçable sans toucher au calcul.
+- **Le cœur métier (`domain/`) est pur et testé** ([backtest.test.ts](src/domain/backtest.test.ts),
+  [types.test.ts](src/domain/types.test.ts)) et la couche infra parse/filtre/trie les
+  données externes sous test ([gateio.test.ts](src/infrastructure/gateio.test.ts)) —
+  **23 tests** au total. La source de prix n'est qu'un détail d'infrastructure,
+  remplaçable sans toucher au calcul.
 - **`<Simulator/>` est autonome et embeddable** : il reçoit ses valeurs par défaut en
   props (`defaultCoinId`, `defaultAmount`, `compact`), peu de dépendances, aucun état
   global. Il peut vivre dans la suite S'investir ou être chargé en iframe ailleurs.
@@ -96,8 +101,9 @@ pluriannuel.
 → J'ai retenu l'**API publique de klines de Gate.io** : pas de clé, pas de secret à
 gérer, ~1000 jours d'historique journalier par requête. La **liste des cryptos est
 elle aussi dynamique** : les ~2000 paires USDT tradables sont récupérées via Gate.io
-(`/api/coins`) et parcourues dans un combobox de recherche. La démo est ainsi
-**100 % reproductible** par l'évaluateur sans configuration.
+(`currency_pairs` + `tickers` en parallèle), **triées par volume 24h** pour mettre les
+cryptos majeures en tête, et parcourues dans un combobox de recherche. La démo est
+ainsi **100 % reproductible** par l'évaluateur sans configuration.
 
 Les prix sont en **USDT (≈ USD)**, devise réelle des données — affichée telle quelle
 par honnêteté plutôt que convertie approximativement.

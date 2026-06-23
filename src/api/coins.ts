@@ -1,4 +1,4 @@
-import type { Coin } from "@/domain/types";
+import type { Coin } from "@/core/types";
 
 type CoinsApiResponse = { coins: Coin[]; cached: boolean } | { error: string };
 

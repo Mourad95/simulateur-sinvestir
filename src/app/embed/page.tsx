@@ -1,6 +1,6 @@
-import { Simulator } from "@/components/Simulator";
-import { isValidCoin } from "@/domain/types";
-import { DEFAULT_COIN_ID, DEFAULT_AMOUNT } from "@/domain/constants";
+import { Simulator } from "@/ui/simulator/Simulator";
+import { isValidCoin } from "@/core/types";
+import { DEFAULT_COIN_ID, DEFAULT_AMOUNT } from "@/core/constants";
 
 /**
  * Version épurée pour l'embedding (iframe) : aucun header/footer du site.

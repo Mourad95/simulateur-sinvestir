@@ -4,7 +4,7 @@ import {
   fetchTradablePairs,
   PriceProviderError,
 } from "./gateio";
-import { toSeconds } from "@/lib/time";
+import { toSeconds } from "@/core/time";
 
 /** Une bougie Gate.io : [timestamp_s, volumeQuote, close, high, low, open, ...]. */
 function candle(timestampSeconds: number, close: number): string[] {

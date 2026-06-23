@@ -3,18 +3,18 @@
 import { useMemo, useState } from "react";
 import { SimulatorForm, type FormState } from "./SimulatorForm";
 import { SimulatorResult } from "./SimulatorResult";
-import { Card } from "./ui/primitives";
+import { Card } from "@/ui/primitives/primitives";
 import { usePriceHistory } from "@/hooks/usePriceHistory";
 import { useCoins } from "@/hooks/useCoins";
-import { runBacktest } from "@/domain/backtest";
-import type { CoinId } from "@/domain/types";
+import { runBacktest } from "@/core/backtest";
+import type { CoinId } from "@/core/types";
 import {
   COMPARISON_RATE,
   DEFAULT_HISTORY_YEARS,
   DEFAULT_COIN_ID,
   DEFAULT_AMOUNT,
-} from "@/domain/constants";
-import { startOfToday, yearsBefore } from "@/lib/time";
+} from "@/core/constants";
+import { startOfToday, yearsBefore } from "@/core/time";
 
 const EMPTY_PRICES = [] as const;
 

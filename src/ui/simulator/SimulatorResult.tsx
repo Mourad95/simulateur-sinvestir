@@ -2,10 +2,10 @@
 
 import dynamic from "next/dynamic";
 import { ResultCards } from "./ResultCards";
-import { Card } from "./ui/primitives";
-import { COMPARISON_LABEL } from "@/domain/constants";
-import { formatMoney } from "@/lib/format";
-import type { SimulationResult } from "@/domain/types";
+import { Card } from "@/ui/primitives/primitives";
+import { COMPARISON_LABEL } from "@/core/constants";
+import { formatMoney } from "@/core/format";
+import type { SimulationResult } from "@/core/types";
 
 // Recharts mesure le DOM : on évite son rendu serveur (warning de taille au prerender).
 const EvolutionChart = dynamic(

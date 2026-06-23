@@ -3,7 +3,7 @@ import {
   PriceProviderError,
   fetchPriceHistory,
 } from "@/services/gateio/gateio";
-import { isValidCoin, type CoinId, type PricePoint } from "@/domain/types";
+import { isValidCoin, type CoinId, type PricePoint } from "@/core/types";
 import { PRICE_CACHE_TTL_MS } from "@/config/prices";
 
 /** Cache mémoire process-local : amortit les rate limits du fournisseur entre requêtes. */

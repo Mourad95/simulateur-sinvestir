@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Coin, CoinId } from "@/domain/types";
+import type { Coin, CoinId } from "@/core/types";
 
 /** Nombre max de résultats affichés (le reste s'atteint en affinant la recherche). */
 const MAX_VISIBLE = 50;

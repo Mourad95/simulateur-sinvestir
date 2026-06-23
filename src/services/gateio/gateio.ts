@@ -1,11 +1,11 @@
-import type { Coin, CoinId, PricePoint } from "@/domain/types";
+import type { Coin, CoinId, PricePoint } from "@/core/types";
 import {
   GATEIO_BASE_URL,
   MAX_CANDLES,
   PRICE_CACHE_TTL_SECONDS,
   COINS_CACHE_TTL_SECONDS,
 } from "@/config/prices";
-import { toMs } from "@/lib/time";
+import { toMs } from "@/core/time";
 
 /**
  * Une bougie Gate.io : tableau de chaînes.

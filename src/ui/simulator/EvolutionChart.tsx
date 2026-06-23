@@ -11,8 +11,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { formatDate, formatMoney } from "@/lib/format";
-import type { EvolutionPoint } from "@/domain/types";
+import { formatDate, formatMoney } from "@/core/format";
+import type { EvolutionPoint } from "@/core/types";
 
 const COLORS = {
   crypto: "#1098f7",

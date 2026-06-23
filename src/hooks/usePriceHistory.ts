@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchPrices } from "@/lib/prices-client";
-import type { CoinId, PricePoint } from "@/domain/types";
+import { fetchPrices } from "@/api/prices";
+import type { CoinId, PricePoint } from "@/core/types";
 
 /**
  * Récupère l'historique de prix d'une crypto sur une période.

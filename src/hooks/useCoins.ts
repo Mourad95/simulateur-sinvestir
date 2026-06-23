@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchCoins } from "@/lib/coins-client";
-import { FALLBACK_COINS, type Coin } from "@/domain/types";
+import { fetchCoins } from "@/api/coins";
+import { FALLBACK_COINS, type Coin } from "@/core/types";
 
 /**
  * Liste des cryptos sélectionnables (paires USDT Gate.io).

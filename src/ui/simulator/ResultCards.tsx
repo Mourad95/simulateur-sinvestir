@@ -1,6 +1,6 @@
-import { Card } from "@/components/ui/primitives";
-import { formatMoney, formatPercent } from "@/lib/format";
-import type { SimulationResult } from "@/domain/types";
+import { Card } from "@/ui/primitives/primitives";
+import { formatMoney, formatPercent } from "@/core/format";
+import type { SimulationResult } from "@/core/types";
 
 export function ResultCards({ result }: { result: SimulationResult }) {
   const isGain = result.gainAmount >= 0;

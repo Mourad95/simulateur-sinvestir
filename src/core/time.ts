@@ -1,4 +1,4 @@
-import { MS_PER_DAY, DAYS_PER_YEAR } from "@/domain/constants";
+import { MS_PER_DAY, DAYS_PER_YEAR } from "@/core/constants";
 
 /** Conversions temporelles partagées (pure functions). */
 

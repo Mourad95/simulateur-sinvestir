@@ -56,37 +56,38 @@ simulateur actuel sans friction d'intégration.
   les gains/pertes, police **Lexend**. L'objectif était la fidélité visuelle, pas une
   approximation.
 
-### Architecture — séparation domaine / infrastructure / présentation
+### Architecture — couches nommées par responsabilité
 
-Inspirée de la Clean Architecture, dimensionnée à la taille du projet (pas de
-sur-ingénierie) :
+Clean Architecture dimensionnée au projet. Chaque dossier a un rôle explicite et la
+dépendance va toujours vers l'intérieur (`app` → `ui`/`hooks`/`api` → `core`) :
 
 ```
 src/
-├─ domain/            # logique métier PURE, testable sans réseau ni framework
-│  ├─ backtest.ts     # calcul DCA / one-shot + CAGR
-│  ├─ constants.ts    # valeurs métier & temporelles partagées
-│  └─ types.ts        # types + isValidCoin (type guard) + fallback coins
-├─ config/            # config externe centralisée (URL/cache du fournisseur)
-├─ infrastructure/
-│  └─ gateio.ts       # accès Gate.io : prix + liste des paires (remplaçable)
-├─ hooks/             # usePriceHistory, useCoins (TanStack Query)
-├─ app/
-│  ├─ api/prices/     # proxy serveur : prix d'une paire (cache + erreurs)
-│  ├─ api/coins/      # proxy serveur : liste des paires (cache)
-│  ├─ embed/          # version embarquable
-│  └─ demo-embed/     # preuve d'intégration
-├─ components/        # Simulator (orchestration) + SimulatorResult / Form
-│  │                  #   / CoinCombobox / EvolutionChart / ResultCards
-│  └─ ui/             # primitives (Card, Field, inputs…)
-└─ lib/               # time (conversions), format, clients API
+├─ core/              # MÉTIER PUR, sans réseau ni framework (le cœur de la valeur)
+│  ├─ backtest.ts     #   calcul DCA / one-shot + CAGR
+│  ├─ constants.ts    #   valeurs métier & temporelles partagées
+│  ├─ types.ts        #   types + isValidCoin (type guard) + fallback coins
+│  ├─ time.ts         #   conversions ms/s/jours (pure functions)
+│  └─ format.ts       #   formatage € / % / dates (fr-FR)
+├─ config/            # configuration externe centralisée (URL/cache du fournisseur)
+├─ services/          # accès aux systèmes externes
+│  └─ gateio/         #   gateio.ts : prix + liste des paires (remplaçable)
+├─ api/               # clients HTTP côté front (appellent les API routes internes)
+│  ├─ prices.ts
+│  └─ coins.ts
+├─ hooks/             # état serveur React (usePriceHistory, useCoins — TanStack Query)
+├─ ui/                # présentation
+│  ├─ simulator/      #   Simulator (orchestration) + Result/Form/Combobox/Chart/Cards
+│  └─ primitives/     #   composants génériques (Card, Field, inputs…)
+└─ app/               # Next.js : pages, layout, et API routes (proxy serveur)
+   └─ api/            #   /prices et /coins : proxy + cache + gestion d'erreurs
 ```
 
-- **Le cœur métier (`domain/`) est pur et testé** ([backtest.test.ts](src/domain/backtest.test.ts),
-  [types.test.ts](src/domain/types.test.ts)) et la couche infra parse/filtre/trie les
-  données externes sous test ([gateio.test.ts](src/infrastructure/gateio.test.ts)) —
-  **23 tests** au total. La source de prix n'est qu'un détail d'infrastructure,
-  remplaçable sans toucher au calcul.
+- **Le cœur métier (`core/`) est pur et testé** ([backtest.test.ts](src/core/backtest.test.ts),
+  [types.test.ts](src/core/types.test.ts)) et la couche `services` parse/filtre/trie les
+  données externes sous test ([gateio.test.ts](src/services/gateio/gateio.test.ts)) —
+  **23 tests** au total. La source de prix n'est qu'un détail remplaçable sans toucher
+  au calcul.
 - **`<Simulator/>` est autonome et embeddable** : il reçoit ses valeurs par défaut en
   props (`defaultCoinId`, `defaultAmount`, `compact`), peu de dépendances, aucun état
   global. Il peut vivre dans la suite S'investir ou être chargé en iframe ailleurs.

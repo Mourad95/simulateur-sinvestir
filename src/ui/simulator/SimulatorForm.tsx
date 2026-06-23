@@ -1,9 +1,9 @@
 "use client";
 
-import { Field, SegmentedControl, TextInput } from "@/components/ui/primitives";
+import { Field, SegmentedControl, TextInput } from "@/ui/primitives/primitives";
 import { CoinCombobox } from "./CoinCombobox";
-import type { Coin, CoinId, Frequency } from "@/domain/types";
-import { toDateInputValue, fromDateInputValue } from "@/lib/format";
+import type { Coin, CoinId, Frequency } from "@/core/types";
+import { toDateInputValue, fromDateInputValue } from "@/core/format";
 
 export type FormState = {
   coinId: CoinId;

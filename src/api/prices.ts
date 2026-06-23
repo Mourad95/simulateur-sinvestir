@@ -1,5 +1,5 @@
-import type { CoinId, PricePoint } from "@/domain/types";
-import { toSeconds } from "@/lib/time";
+import type { CoinId, PricePoint } from "@/core/types";
+import { toSeconds } from "@/core/time";
 
 type PricesApiResponse =
   | { prices: { timestamp: number; price: number }[]; cached: boolean }

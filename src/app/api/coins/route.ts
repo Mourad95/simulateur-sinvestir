@@ -4,7 +4,7 @@ import {
   fetchTradablePairs,
 } from "@/services/gateio/gateio";
 import { COINS_CACHE_TTL_MS } from "@/config/prices";
-import type { Coin } from "@/domain/types";
+import type { Coin } from "@/core/types";
 
 /** Cache mémoire process-local : la liste des paires change rarement. */
 let cache: { data: Coin[]; expiresAt: number } | null = null;

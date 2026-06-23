@@ -22,23 +22,40 @@ type GatePair = {
   trade_status: string;
 };
 
+/** Ticker spot Gate.io (champs utiles seulement). */
+type GateTicker = {
+  currency_pair: string;
+  quote_volume?: string;
+};
+
+/** GET JSON sur Gate.io avec cache Next ; lève une PriceProviderError si échec. */
+async function gateioGet<T>(path: string, revalidate: number): Promise<T> {
+  const response = await fetch(`${GATEIO_BASE_URL}${path}`, {
+    headers: { accept: "application/json" },
+    next: { revalidate },
+  });
+  if (!response.ok) {
+    throw new PriceProviderError(`Gate.io a répondu ${response.status}`, response.status);
+  }
+  return response.json() as Promise<T>;
+}
+
 /**
- * Récupère la liste des paires spot tradables contre USDT via Gate.io.
- * Triées par symbole. `name` utilise le nom complet quand Gate.io le fournit.
+ * Récupère la liste des paires spot tradables contre USDT via Gate.io,
+ * triées par volume 24h décroissant (cryptos majeures en tête).
+ * `name` utilise le nom complet quand Gate.io le fournit.
  *
  * Lève une PriceProviderError en cas d'échec ; l'appelant gère la résilience.
  */
 export async function fetchTradablePairs(): Promise<Coin[]> {
-  const response = await fetch(`${GATEIO_BASE_URL}/spot/currency_pairs`, {
-    headers: { accept: "application/json" },
-    next: { revalidate: COINS_CACHE_TTL_SECONDS },
-  });
+  const [pairs, tickers] = await Promise.all([
+    gateioGet<GatePair[]>("/spot/currency_pairs", COINS_CACHE_TTL_SECONDS),
+    gateioGet<GateTicker[]>("/spot/tickers", COINS_CACHE_TTL_SECONDS),
+  ]);
 
-  if (!response.ok) {
-    throw new PriceProviderError(`Gate.io a répondu ${response.status}`, response.status);
-  }
-
-  const pairs = (await response.json()) as GatePair[];
+  const volumeByPair = new Map(
+    tickers.map((ticker) => [ticker.currency_pair, Number(ticker.quote_volume) || 0]),
+  );
 
   return pairs
     .filter((pair) => pair.quote === "USDT" && pair.trade_status === "tradable")
@@ -47,7 +64,7 @@ export async function fetchTradablePairs(): Promise<Coin[]> {
       symbol: pair.base,
       name: pair.base_name?.trim() || pair.base,
     }))
-    .sort((a, b) => a.symbol.localeCompare(b.symbol));
+    .sort((a, b) => (volumeByPair.get(b.id) ?? 0) - (volumeByPair.get(a.id) ?? 0));
 }
 
 /**

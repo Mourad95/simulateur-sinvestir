@@ -14,6 +14,31 @@ function mockFetchOnce(response: Partial<Response> & { json?: () => Promise<unkn
   );
 }
 
+/** Mocke fetch en routant selon l'URL (currency_pairs vs tickers). */
+function mockFetchByUrl(routes: {
+  pairs?: unknown;
+  tickers?: unknown;
+  ok?: boolean;
+  status?: number;
+}) {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockImplementation((url: string) => {
+      const isTickers = String(url).includes("/tickers");
+      return Promise.resolve({
+        ok: routes.ok ?? true,
+        status: routes.status ?? 200,
+        json: async () => (isTickers ? routes.tickers : routes.pairs) ?? [],
+      });
+    }),
+  );
+}
+
+const ticker = (currency_pair: string, quote_volume: string) => ({
+  currency_pair,
+  quote_volume,
+});
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
@@ -85,24 +110,43 @@ describe("fetchTradablePairs", () => {
     ...over,
   });
 
-  it("ne garde que les paires USDT tradables, mappées et triées par symbole", async () => {
-    mockFetchOnce({
-      json: async () => [
+  it("ne garde que les paires USDT tradables et les trie par volume décroissant", async () => {
+    mockFetchByUrl({
+      pairs: [
         pair({ id: "SOL_USDT", base: "SOL", base_name: "Solana" }),
         pair({ id: "BTC_USDT", base: "BTC", base_name: "Bitcoin" }),
         pair({ id: "ETH_BTC", base: "ETH", quote: "BTC" }), // mauvais quote
         pair({ id: "OLD_USDT", base: "OLD", trade_status: "untradable" }), // non tradable
       ],
+      tickers: [ticker("SOL_USDT", "5000"), ticker("BTC_USDT", "9000")],
     });
 
     const coins = await fetchTradablePairs();
 
+    // BTC a plus de volume que SOL → il passe devant malgré l'ordre d'origine.
     expect(coins.map((c) => c.symbol)).toEqual(["BTC", "SOL"]);
     expect(coins[0]).toEqual({ id: "BTC_USDT", symbol: "BTC", name: "Bitcoin" });
   });
 
+  it("place les paires sans volume connu en fin de liste", async () => {
+    mockFetchByUrl({
+      pairs: [
+        pair({ id: "AAA_USDT", base: "AAA" }), // pas de ticker
+        pair({ id: "BBB_USDT", base: "BBB" }),
+      ],
+      tickers: [ticker("BBB_USDT", "100")],
+    });
+
+    const coins = await fetchTradablePairs();
+
+    expect(coins.map((c) => c.symbol)).toEqual(["BBB", "AAA"]);
+  });
+
   it("retombe sur le symbole quand le nom complet est absent", async () => {
-    mockFetchOnce({ json: async () => [pair({ id: "ZZZ_USDT", base: "ZZZ" })] });
+    mockFetchByUrl({
+      pairs: [pair({ id: "ZZZ_USDT", base: "ZZZ" })],
+      tickers: [],
+    });
 
     const coins = await fetchTradablePairs();
 
@@ -110,7 +154,7 @@ describe("fetchTradablePairs", () => {
   });
 
   it("lève une PriceProviderError en cas d'échec HTTP", async () => {
-    mockFetchOnce({ ok: false, status: 503 });
+    mockFetchByUrl({ ok: false, status: 503 });
 
     await expect(fetchTradablePairs()).rejects.toMatchObject({ status: 503 });
   });

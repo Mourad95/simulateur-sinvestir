@@ -7,7 +7,7 @@ Backtest rétrospectif d'un investissement en cryptomonnaie, **en une fois** ou 
 **DCA** (apports réguliers), sur **données de marché historiques réelles**, avec
 comparaison à un Livret A.
 
-**Démo en ligne** : _(lien Vercel à ajouter)_
+**Démo en ligne** : https://simulateur-sinvestir-omega.vercel.app
 
 ---
 
@@ -64,19 +64,23 @@ sur-ingénierie) :
 src/
 ├─ domain/            # logique métier PURE, testable sans réseau ni framework
 │  ├─ backtest.ts     # calcul DCA / one-shot + CAGR
-│  └─ types.ts
+│  ├─ constants.ts    # valeurs métier & temporelles partagées
+│  └─ types.ts        # types + isValidCoin (type guard)
+├─ config/            # config externe centralisée (URL/cache du fournisseur)
 ├─ infrastructure/
 │  └─ gateio.ts       # récupération des prix (détail remplaçable)
+├─ hooks/             # usePriceHistory (TanStack Query)
 ├─ app/
 │  ├─ api/prices/     # proxy serveur : cache + gestion d'erreurs
 │  ├─ embed/          # version embarquable
 │  └─ demo-embed/     # preuve d'intégration
-├─ components/        # UI (Simulator, Form, Chart, ResultCards) + ui/ primitives
-└─ lib/               # formatage, client API
+├─ components/        # Simulator (orchestration) + SimulatorResult/Form/Chart + ui/
+└─ lib/               # time (conversions), format, client API
 ```
 
-- **Le cœur métier (`domain/`) est pur et testé** ([backtest.test.ts](src/domain/backtest.test.ts),
-  9 tests) : c'est là que vit la valeur, donc c'est là que sont les tests. La source
+- **Le cœur métier (`domain/`) est pur et testé** ([backtest.test.ts](src/domain/backtest.test.ts))
+  et la couche infra parse/filtre les données externes sous test
+  ([gateio.test.ts](src/infrastructure/gateio.test.ts)) — 16 tests au total. La source
   de prix n'est qu'un détail d'infrastructure, remplaçable sans toucher au calcul.
 - **`<Simulator/>` est autonome et embeddable** : il reçoit ses valeurs par défaut en
   props (`defaultCoinId`, `defaultAmount`, `compact`), peu de dépendances, aucun état

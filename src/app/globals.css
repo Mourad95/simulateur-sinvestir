@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens repris de simulateurs.sinvestir.fr (extraits du CSS de production).
+ * Thème sombre, bleu électrique de marque + accent or, sémantique vert/rouge.
+ */
+@theme {
+  --color-surface: #080c16; /* fond principal */
+  --color-surface-soft: #0f172a; /* cartes */
+  --color-surface-elevated: #00173f; /* éléments surélevés */
+  --color-border: #1e293b;
+
+  --color-brand: #1098f7; /* bleu de marque */
+  --color-brand-dark: #0049c6;
+  --color-accent: #f8d047; /* or */
+  --color-accent-dark: #e7c53d;
+
+  --color-text: #ffffff;
+  --color-text-muted: #9ca3af;
+
+  --color-gain: #11d05a; /* plus-value */
+  --color-loss: #fb2c36; /* moins-value */
+
+  --font-sans: var(--font-lexend), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-base: 8px;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Inputs date : forcer l'icône en clair sur fond sombre. */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.6;
+  cursor: pointer;
+}
